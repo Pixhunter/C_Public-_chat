@@ -1,2 +1,2 @@
-# C_Public-_chat
+# C_Public_chat
 Simple server for public chat 
