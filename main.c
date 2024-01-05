@@ -122,6 +122,22 @@ void attempt_over(int socket, struct sockaddr_in socket_address, int address_len
     close(sd); 
 }
 
+// function to check user wants to disconnect from server
+int check_exit(char* buffer) {
+    printf("check buffer=%s if user wants to disconnect\n", buffer);
+    char q[4] = "quit";
+    // check length
+    if (strlen(buffer) != 4) return 0;
+    
+    // check each letter
+    int i = 0;
+    while (i < 4 && buffer[i] == q[i]) i++;
+
+    // check that each char was checked
+    if (i != 4) return 0;
+    return 1;
+}
+
 int main(int argc , char *argv[]) {   
     // kill processes on PORT if buisy
     kill_all_processes_on_server_port();
@@ -261,6 +277,15 @@ int main(int argc , char *argv[]) {
                 } else { 
                     // replace \n in message from client
                     buffer[read_size - 1] = '\0';
+
+                    // if user want to disconnect
+                    if (check_exit(buffer)) {
+                        printf("user_name=%s wants to disconnect\n", client[i].user_name);
+                        attempt_over(client[i].socket, socket_address, address_len, sd, &client[i]);
+                        continue;
+                    }
+                    
+
                     printf("Echo message from socket=%d user_name=%s buffer_size=%d buffer=%s\n", client[i].socket, client[i].user_name, read_size, buffer);
 
                     if (client[i].user_name == NULL) {
@@ -407,7 +432,7 @@ int main(int argc , char *argv[]) {
                         strcat(hello_user, " connected to server\n");
                         for (j = 0; j < max_clients; j++) { 
                             // do not send message to not full connected user
-                            if (client[j].password == NULL) continue;
+                            if (client[i].password == NULL) continue;
 
                             sd = client[j].socket;   
                             send(sd , hello_user , 44 + strlen(client[i].user_name), 0);   
@@ -431,7 +456,7 @@ int main(int argc , char *argv[]) {
                     printf("Echo message from buffer=%s\n", buffer); 
                     for (i = 0; i < max_clients; i++) { 
                         // do not send message to not full connected user
-                        if (client[j].password == NULL) continue;
+                        if (client[i].password == NULL) continue;
 
                         sd = client[i].socket;   
                         send(sd , str , strlen(str) , 0);   
